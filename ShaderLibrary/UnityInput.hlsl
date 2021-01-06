@@ -130,6 +130,11 @@ real4 unity_SHBr;
 real4 unity_SHBg;
 real4 unity_SHBb;
 real4 unity_SHC;
+
+// Motion Vector block feature
+float4x4 unity_MatrixPreviousM;
+float4x4 unity_MatrixPreviousMI;
+float4 unity_MotionVectorsParams;
 CBUFFER_END
 
 #if defined(USING_STEREO_MATRICES)

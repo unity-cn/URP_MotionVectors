@@ -36,6 +36,7 @@ namespace UnityEngine.Rendering.Universal
         internal bool accurateGbufferNormals { get { return m_DeferredLights != null ? m_DeferredLights.AccurateGbufferNormals : false; } }
         ColorGradingLutPass m_ColorGradingLutPass;
         DepthOnlyPass m_DepthPrepass;
+        MotionVectorsPass m_MotionVectorsPass;
         DepthNormalOnlyPass m_DepthNormalPrepass;
         MainLightShadowCasterPass m_MainLightShadowCasterPass;
         AdditionalLightsShadowCasterPass m_AdditionalLightsShadowCasterPass;
@@ -162,6 +163,9 @@ namespace UnityEngine.Rendering.Universal
                 m_TileDepthRangeExtraPass = new TileDepthRangePass(RenderPassEvent.BeforeRenderingOpaques + 4, m_DeferredLights, 1);
                 m_DeferredPass = new DeferredPass(RenderPassEvent.BeforeRenderingOpaques + 5, m_DeferredLights);
             }
+            
+            
+            m_MotionVectorsPass = new MotionVectorsPass(RenderPassEvent.BeforeRenderingOpaques);
 
             // Always create this pass even in deferred because we use it for wireframe rendering in the Editor or offscreen depth texture rendering.
             m_RenderOpaqueForwardPass = new DrawObjectsPass(URPProfileId.DrawOpaqueObjects, true, RenderPassEvent.BeforeRenderingOpaques, RenderQueueRange.opaque, data.opaqueLayerMask, m_DefaultStencilState, stencilData.stencilReference);
@@ -417,6 +421,23 @@ namespace UnityEngine.Rendering.Universal
             if (cameraData.xr.hasValidOcclusionMesh)
                 EnqueuePass(m_XROcclusionMeshPass);
 #endif
+            
+            // // Get MotionData
+            // var camera = renderingData.cameraData.camera;
+            // MotionData motionData;
+            // if(!m_MotionDatas.TryGetValue(camera, out motionData))
+            // {
+            //     motionData = new MotionData();
+            //     m_MotionDatas.Add(camera, motionData);
+            // }
+            //
+            // // Calculate motion data
+            // CalculateTime();
+            // UpdateMotionData(camera, motionData);
+            //
+            // // Motion vector pass
+            // m_MotionVectorRenderPass.Setup(motionData);
+            EnqueuePass(m_MotionVectorsPass);
 
             if (this.actualRenderingMode == RenderingMode.Deferred)
                 EnqueueDeferred(ref renderingData, requiresDepthPrepass, mainLightShadows, additionalLightShadows);

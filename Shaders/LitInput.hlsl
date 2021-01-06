@@ -30,6 +30,7 @@ half _DetailNormalMapScale;
 half _Surface;
 CBUFFER_END
 
+
 // NOTE: Do not ifdef the properties for dots instancing, but ifdef the actual usage.
 // Otherwise you might break CPU-side as property constant-buffer offsets change per variant.
 // NOTE: Dots instancing is orthogonal to the constant buffer above.
