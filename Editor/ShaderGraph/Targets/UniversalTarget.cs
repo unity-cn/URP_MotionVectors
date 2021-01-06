@@ -359,6 +359,32 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
             includes = CoreIncludes.DepthOnly,
         };
 
+        public static readonly PassDescriptor MotionVectors = new PassDescriptor()
+        {
+            // Definition
+            displayName = "MotionVectors",
+            referenceName = "SHADERPASS_MOTIONVECTORS",
+            lightMode = "MotionVectors",
+            useInPreview = false,
+
+            // Template
+            passTemplatePath = GenerationUtils.GetDefaultTemplatePath("PassMesh.template"),
+            sharedTemplateDirectories = GenerationUtils.GetDefaultSharedTemplateDirectories(),
+
+            // Port Mask
+            validVertexBlocks = CoreBlockMasks.Vertex,
+            validPixelBlocks = CoreBlockMasks.FragmentAlphaOnly,
+
+            // Fields
+            structs = CoreStructCollections.Default,
+            fieldDependencies = CoreFieldDependencies.Default,
+
+            // Conditional State
+            renderStates = CoreRenderStates.MotionVectors,
+            pragmas = CorePragmas.Instanced,
+            includes = CoreIncludes.MotionVectors,
+        };
+
         public static readonly PassDescriptor ShadowCaster = new PassDescriptor()
         {
             // Definition
@@ -497,6 +523,19 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
             { RenderState.Blend(Blend.DstColor, Blend.Zero), new FieldCondition(UniversalFields.BlendMultiply, true) },
         };
 
+        public static readonly RenderStateCollection MotionVectors = new RenderStateCollection
+        {
+            { RenderState.ZTest(ZTest.LEqual) },
+            { RenderState.ZWrite(ZWrite.On) },
+            { RenderState.Cull(Cull.Back), new FieldCondition(Fields.DoubleSided, false) },
+            { RenderState.Cull(Cull.Off), new FieldCondition(Fields.DoubleSided, true) },
+            { RenderState.Blend(Blend.One, Blend.Zero), new FieldCondition(UniversalFields.SurfaceOpaque, true) },
+            { RenderState.Blend(Blend.SrcAlpha, Blend.OneMinusSrcAlpha, Blend.One, Blend.OneMinusSrcAlpha), new FieldCondition(Fields.BlendAlpha, true) },
+            { RenderState.Blend(Blend.One, Blend.OneMinusSrcAlpha, Blend.One, Blend.OneMinusSrcAlpha), new FieldCondition(UniversalFields.BlendPremultiply, true) },
+            { RenderState.Blend(Blend.One, Blend.One, Blend.One, Blend.One), new FieldCondition(UniversalFields.BlendAdd, true) },
+            { RenderState.Blend(Blend.DstColor, Blend.Zero), new FieldCondition(UniversalFields.BlendMultiply, true) },
+        };
+
         public static readonly RenderStateCollection DepthNormalsOnly = new RenderStateCollection
         {
             { RenderState.ZTest(ZTest.LEqual) },
@@ -605,6 +644,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
         const string kVaryings = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl";
         const string kShaderPass = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl";
         const string kDepthOnlyPass = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/DepthOnlyPass.hlsl";
+        const string kMotionVectorsPass = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/MotionVectorsPass.hlsl";
         const string kDepthNormalsOnlyPass = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/DepthNormalsOnlyPass.hlsl";
         const string kShadowCasterPass = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShadowCasterPass.hlsl";
         const string kTextureStack = "Packages/com.unity.render-pipelines.core/ShaderLibrary/TextureStack.hlsl";
@@ -637,6 +677,17 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
             // Post-graph
             { CorePostgraph },
             { kDepthOnlyPass, IncludeLocation.Postgraph },
+        };
+
+        public static readonly IncludeCollection MotionVectors = new IncludeCollection
+        {
+            // Pre-graph
+            { CorePregraph },
+            { ShaderGraphPregraph },
+
+            // Post-graph
+            { CorePostgraph },
+            { kMotionVectorsPass, IncludeLocation.Postgraph },
         };
 
         public static readonly IncludeCollection DepthNormalsOnly = new IncludeCollection

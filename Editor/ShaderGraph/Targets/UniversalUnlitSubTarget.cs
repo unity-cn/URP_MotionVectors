@@ -132,6 +132,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
                     { UnlitPasses.Unlit },
                     { CorePasses.ShadowCaster },
                     { CorePasses.DepthOnly },
+                    { CorePasses.MotionVectors },
                 },
             };
 
@@ -142,6 +143,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
                     var unlit = UnlitPasses.Unlit;
                     var shadowCaster = CorePasses.ShadowCaster;
                     var depthOnly = CorePasses.DepthOnly;
+                    var motionVectors = CorePasses.MotionVectors;
 
                     unlit.pragmas = CorePragmas.DOTSForward;
                     shadowCaster.pragmas = CorePragmas.DOTSInstanced;
@@ -157,6 +159,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
                             { unlit },
                             { shadowCaster },
                             { depthOnly },
+                            { motionVectors }
                         },
                     };
                 }
