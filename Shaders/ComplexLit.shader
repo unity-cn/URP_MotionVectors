@@ -202,6 +202,36 @@ Shader "Universal Render Pipeline/Complex Lit"
             ENDHLSL
         }
 
+        Pass
+        {
+            Name "MotionVectors"
+            Tags{"LightMode" = "MotionVectors"}
+
+            ZWrite On
+            Cull[_Cull]
+
+            HLSLPROGRAM
+            #pragma exclude_renderers gles gles3 glcore
+            #pragma target 4.5
+
+            #pragma vertex MotionVectorsVertex
+            #pragma fragment MotionVectorsFragment
+
+            // -------------------------------------
+            // Material Keywords
+            #pragma shader_feature_local_fragment _ALPHATEST_ON
+            #pragma shader_feature_local_fragment _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+
+            //--------------------------------------
+            // GPU Instancing
+            #pragma multi_compile_instancing
+            #pragma multi_compile _ DOTS_INSTANCING_ON
+
+            #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/Shaders/MotionVectorsPass.hlsl"
+            ENDHLSL
+        }
+
         // This pass is used when drawing to a _CameraNormalsTexture texture
         Pass
         {
@@ -412,6 +442,36 @@ Shader "Universal Render Pipeline/Complex Lit"
 
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/Shaders/DepthOnlyPass.hlsl"
+            ENDHLSL
+        }
+
+        Pass
+        {
+            Name "MotionVectors"
+            Tags{"LightMode" = "MotionVectors"}
+
+            ZWrite On
+            Cull[_Cull]
+
+            HLSLPROGRAM
+            #pragma exclude_renderers gles gles3 glcore
+            #pragma target 2.0
+
+            #pragma vertex MotionVectorsVertex
+            #pragma fragment MotionVectorsFragment
+
+            // -------------------------------------
+            // Material Keywords
+            #pragma shader_feature_local_fragment _ALPHATEST_ON
+            #pragma shader_feature_local_fragment _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+
+            //--------------------------------------
+            // GPU Instancing
+            #pragma multi_compile_instancing
+            #pragma multi_compile _ DOTS_INSTANCING_ON
+
+            #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/Shaders/MotionVectorsPass.hlsl"
             ENDHLSL
         }
 
