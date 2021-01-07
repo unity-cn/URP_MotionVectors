@@ -11,7 +11,7 @@ namespace UnityEngine.Rendering.Universal.Internal
         RenderTargetHandle m_MotionVectorHandle;
         Material m_CameraMaterial;
         //Material m_ObjectMaterial;
-        //MotionData m_MotionData;
+        MotionData m_MotionData;
         
         ShaderTagId m_ShaderTagId = new ShaderTagId("MotionVectors");
         
@@ -20,6 +20,14 @@ namespace UnityEngine.Rendering.Universal.Internal
             // Set data
             base.profilingSampler = new ProfilingSampler(k_ProfilingTag);
             renderPassEvent = evt;
+        }
+        
+        internal void Setup(MotionData motionData)
+        {
+            // Set data
+            m_MotionData = motionData;
+            //m_CameraMaterial = new Material(Shader.Find(kCameraShader));
+            //m_ObjectMaterial = new Material(Shader.Find(kObjectShader));
         }
         
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
@@ -48,7 +56,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                 ExecuteCommand(context, cmd);
 
                 // Shader uniforms
-                //Shader.SetGlobalMatrix(k_PreviousViewProjectionMatrix, m_MotionData.previousViewProjectionMatrix);
+                Shader.SetGlobalMatrix(k_PreviousViewProjectionMatrix, m_MotionData.previousViewProjectionMatrix);
 
                 // These flags are still required in SRP or the engine won't compute previous model matrices...
                 // If the flag hasn't been set yet on this camera, motion vectors will skip a frame.
@@ -106,5 +114,52 @@ namespace UnityEngine.Rendering.Universal.Internal
             context.ExecuteCommandBuffer(cmd);
             cmd.Clear();
         }
+    }
+    
+    internal sealed class MotionData
+    {
+        #region Fields
+        bool m_IsFirstFrame;
+        int m_LastFrameActive;
+        Matrix4x4 m_ViewProjectionMatrix;
+        Matrix4x4 m_PreviousViewProjectionMatrix;
+        #endregion
+
+        #region Constructors
+        internal MotionData()
+        {
+            // Set data
+            m_IsFirstFrame = true;
+            m_LastFrameActive = -1;
+            m_ViewProjectionMatrix = Matrix4x4.identity;
+            m_PreviousViewProjectionMatrix = Matrix4x4.identity;
+        }
+        #endregion
+
+        #region Properties
+        internal bool isFirstFrame
+        {
+            get => m_IsFirstFrame;
+            set => m_IsFirstFrame = value;
+        }
+
+        internal int lastFrameActive
+        {
+            get => m_LastFrameActive;
+            set => m_LastFrameActive = value;
+        }
+
+        internal Matrix4x4 viewProjectionMatrix
+        {
+            get => m_ViewProjectionMatrix;
+            set => m_ViewProjectionMatrix = value;
+        }
+
+        internal Matrix4x4 previousViewProjectionMatrix
+        {
+            get => m_PreviousViewProjectionMatrix;
+            set => m_PreviousViewProjectionMatrix = value;
+        }
+        #endregion
     }
 }

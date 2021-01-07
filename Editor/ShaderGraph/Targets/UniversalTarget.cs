@@ -377,6 +377,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
 
             // Fields
             structs = CoreStructCollections.Default,
+            //requiredFields = CoreRequiredFields.MotionVectors,
             fieldDependencies = CoreFieldDependencies.Default,
 
             // Conditional State
@@ -457,6 +458,11 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
         public static readonly FieldCollection ShadowCaster = new FieldCollection()
         {
             StructFields.Attributes.normalOS,
+        };
+        public static readonly FieldCollection MotionVectors = new FieldCollection()
+        {
+            StructFields.Varyings.texCoord1,
+            StructFields.Varyings.texCoord2,
         };
     }
 #endregion

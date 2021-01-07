@@ -3,7 +3,7 @@
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-struct Attributes
+struct AttributesMV
 {
     float4 position             : POSITION;
     float2 texcoord             : TEXCOORD0;
@@ -11,7 +11,7 @@ struct Attributes
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
-struct Varyings
+struct VaryingsMV
 {
     float4 positionCS           : SV_POSITION;
     float2 uv                   : TEXCOORD0;
@@ -21,9 +21,9 @@ struct Varyings
     UNITY_VERTEX_OUTPUT_STEREO
 };
 
-Varyings MotionVectorsVertex(Attributes input)
+VaryingsMV MotionVectorsVertex(AttributesMV input)
 {
-    Varyings output = (Varyings)0;
+    VaryingsMV output = (VaryingsMV)0;
 
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_TRANSFER_INSTANCE_ID(input, output);
@@ -41,19 +41,18 @@ Varyings MotionVectorsVertex(Attributes input)
         output.positionCS.z += unity_MotionVectorsParams.z * output.positionCS.w;
     #endif
     
+    //output.positionVP = input.position;
     output.positionVP = mul(UNITY_MATRIX_VP, mul(UNITY_MATRIX_M, input.position));
-    //output.previousPositionVP = mul(_PrevViewProjMatrix, mul(unity_MatrixPreviousM, unity_MotionVectorsParams.x == 1 ? float4(input.positionOld, 1) : input.position));
+    output.previousPositionVP = mul(_PrevViewProjMatrix, mul(unity_MatrixPreviousM, unity_MotionVectorsParams.x == 1 ? float4(input.positionOld, 1) : input.position));
     return output;
 }
 
-half4 MotionVectorsFragment(Varyings input) : SV_TARGET
+half4 MotionVectorsFragment(VaryingsMV input) : SV_TARGET
 {
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
     Alpha(SampleAlbedoAlpha(input.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap)).a, _BaseColor, _Cutoff);
-
-    return float4(1.0, 0.0, 1.0, 1.0);
 
     // Note: unity_MotionVectorsParams.y is 0 is forceNoMotion is enabled
     bool forceNoMotion = unity_MotionVectorsParams.y == 0.0;
@@ -61,7 +60,7 @@ half4 MotionVectorsFragment(Varyings input) : SV_TARGET
     {
         return float4(0.0, 0.0, 0.0, 0.0);
     }
-    
+
     // Calculate positions
     input.positionVP.xy = input.positionVP.xy / input.positionVP.w;
     input.previousPositionVP.xy = input.previousPositionVP.xy / input.previousPositionVP.w;

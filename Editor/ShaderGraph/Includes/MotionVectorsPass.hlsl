@@ -1,45 +1,84 @@
 #ifndef SG_MOTION_VECTORS_PASS_INCLUDED
 #define SG_MOTION_VECTORS_PASS_INCLUDED
 
-struct AttributesExtended
+struct AttributesPass
 {
-    Attributes attributes;
-    float3 positionOld          : TEXCOORD4;
+    float3 positionOld : TEXCOORD4;
 };
 
-struct PackedVaryingsExtended
+struct VaryingsPassToPS
 {
-    PackedVaryings packedVaryings;
-    float4 positionVP           : TEXCOORD1;
-    float4 previousPositionVP   : TEXCOORD2;
+    // Note: Z component is not use currently
+    // This is the clip space position. Warning, do not confuse with the value of positionCS in PackedVarying which is SV_POSITION and store in positionSS
+    float4 positionVP;
+    float4 previousPositionVP;
 };
 
-PackedVaryingsExtended vert(AttributesExtended input)
+// Available interpolator start from TEXCOORD8
+struct PackedVaryingsPassToPS
 {
-    Varyings output = (Varyings)0;
-    output = BuildVaryings(input.attributes);
-    PackedVaryingsExtended packedOutputExtended = (PackedVaryingsExtended)0;
-    packedOutputExtended.packedVaryings = PackVaryings(output);
-    // output.previousPositionVP -> packedOutputExtended.previousPositionVP
-    // input.position -> input.attributes.positionOS
-    //packedOutputExtended.previousPositionVP = mul(_PrevViewProjMatrix, mul(unity_MatrixPreviousM, unity_MotionVectorsParams.x == 1 ? float4(input.positionOld, 1) : input.attributes.positionOS));
-    return packedOutputExtended;
+    // Note: Z component is not use
+    float3 interpolators0 : TEXCOORD2;
+    float3 interpolators1 : TEXCOORD3;
+};
+
+PackedVaryingsPassToPS PackVaryingsPassToPS(VaryingsPassToPS input)
+{
+    PackedVaryingsPassToPS output;
+    output.interpolators0 = float3(input.positionVP.xyw);
+    output.interpolators1 = float3(input.previousPositionVP.xyw);
+
+    return output;
 }
 
-half4 frag(PackedVaryingsExtended packedInput) : SV_TARGET 
+VaryingsPassToPS UnpackVaryingsPassToPS(PackedVaryingsPassToPS input)
+{
+    VaryingsPassToPS output;
+    output.positionVP = float4(input.interpolators0.xy, 0.0, input.interpolators0.z);
+    output.previousPositionVP = float4(input.interpolators1.xy, 0.0, input.interpolators1.z);
+
+    return output;
+}
+
+void vert(Attributes input, AttributesPass inputPass, out PackedVaryings packedOutput, out PackedVaryingsPassToPS packedOutputExtra)
+{
+    Varyings output = (Varyings)0;
+    output = BuildVaryings(input);
+
+    VaryingsPassToPS outputExtra = (VaryingsPassToPS)0;
+
+    // this works around an issue with dynamic batching
+    // potentially remove in 5.4 when we use instancing
+    #if defined(UNITY_REVERSED_Z)
+        output.positionCS.z -= unity_MotionVectorsParams.z * output.positionCS.w;
+    #else
+        output.positionCS.z += unity_MotionVectorsParams.z * output.positionCS.w;
+    #endif
+
+    outputExtra.positionVP = mul(UNITY_MATRIX_VP, mul(UNITY_MATRIX_M, float4(input.positionOS, 1.0)));
+    outputExtra.previousPositionVP = mul(_PrevViewProjMatrix, mul(unity_MatrixPreviousM, unity_MotionVectorsParams.x == 1 ? float4(inputPass.positionOld, 1) : float4(input.positionOS, 1.0)));
+
+    packedOutput = (PackedVaryings)0;
+    packedOutput = PackVaryings(output);
+
+    packedOutputExtra = (PackedVaryingsPassToPS)0;
+    packedOutputExtra = PackVaryingsPassToPS(outputExtra);
+}
+
+half4 frag(PackedVaryings packedInput, PackedVaryingsPassToPS packedInputExtra) : SV_TARGET 
 {    
-    Varyings unpacked = UnpackVaryings(packedInput.packedVaryings);
+    Varyings unpacked = UnpackVaryings(packedInput);
     UNITY_SETUP_INSTANCE_ID(unpacked);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(unpacked);
 
     SurfaceDescriptionInputs surfaceDescriptionInputs = BuildSurfaceDescriptionInputs(unpacked);
     SurfaceDescription surfaceDescription = SurfaceDescriptionFunction(surfaceDescriptionInputs);
 
+    VaryingsPassToPS unpackedExtra = UnpackVaryingsPassToPS(packedInputExtra);
+
     #if _AlphaClip
         clip(surfaceDescription.Alpha - surfaceDescription.AlphaClipThreshold);
     #endif
-
-    return float4(0.0, 1.0, 1.0, 1.0);
 
     // Note: unity_MotionVectorsParams.y is 0 is forceNoMotion is enabled
     bool forceNoMotion = unity_MotionVectorsParams.y == 0.0;
@@ -49,11 +88,11 @@ half4 frag(PackedVaryingsExtended packedInput) : SV_TARGET
     }
     
     // Calculate positions
-    packedInput.positionVP.xy = packedInput.positionVP.xy / packedInput.positionVP.w;
-    packedInput.previousPositionVP.xy = packedInput.previousPositionVP.xy / packedInput.previousPositionVP.w;
+    unpackedExtra.positionVP.xy = unpackedExtra.positionVP.xy / unpackedExtra.positionVP.w;
+    unpackedExtra.previousPositionVP.xy = unpackedExtra.previousPositionVP.xy / unpackedExtra.previousPositionVP.w;
 
     // Calculate velocity
-    float2 velocity = (packedInput.positionVP.xy - packedInput.previousPositionVP.xy);
+    float2 velocity = (unpackedExtra.positionVP.xy - unpackedExtra.previousPositionVP.xy);
     #if UNITY_UV_STARTS_AT_TOP
         velocity.y = -velocity.y;
     #endif
