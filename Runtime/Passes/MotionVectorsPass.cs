@@ -10,24 +10,22 @@ namespace UnityEngine.Rendering.Universal.Internal
         
         RenderTargetHandle m_MotionVectorHandle;
         Material m_CameraMaterial;
-        //Material m_ObjectMaterial;
         MotionData m_MotionData;
         
         ShaderTagId m_ShaderTagId = new ShaderTagId("MotionVectors");
         
-        internal MotionVectorsPass(RenderPassEvent evt)
+        internal MotionVectorsPass(RenderPassEvent evt, Material cameraMotionVectorsMaterial)
         {
             // Set data
             base.profilingSampler = new ProfilingSampler(k_ProfilingTag);
             renderPassEvent = evt;
+            m_CameraMaterial = cameraMotionVectorsMaterial;
         }
         
         internal void Setup(MotionData motionData)
         {
             // Set data
             m_MotionData = motionData;
-            //m_CameraMaterial = new Material(Shader.Find(kCameraShader));
-            //m_ObjectMaterial = new Material(Shader.Find(kObjectShader));
         }
         
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
@@ -63,7 +61,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                 camera.depthTextureMode |= DepthTextureMode.MotionVectors | DepthTextureMode.Depth;
 
                 // Drawing
-                //DrawCameraMotionVectors(context, cmd, camera);
+                DrawCameraMotionVectors(context, cmd, camera);
                 DrawObjectMotionVectors(context, ref renderingData, cmd, camera);
             }
             ExecuteCommand(context, cmd);

@@ -94,6 +94,7 @@ namespace UnityEngine.Rendering.Universal
         Material m_TileDepthInfoMaterial;
         Material m_TileDeferredMaterial;
         Material m_StencilDeferredMaterial;
+        Material m_CameraMotionVectorsMaterial;
         
         Dictionary<Camera, MotionData> m_MotionDatas;
         uint  m_FrameCount;
@@ -110,6 +111,7 @@ namespace UnityEngine.Rendering.Universal
             m_CopyDepthMaterial = CoreUtils.CreateEngineMaterial(data.shaders.copyDepthPS);
             m_SamplingMaterial = CoreUtils.CreateEngineMaterial(data.shaders.samplingPS);
             m_ScreenspaceShadowsMaterial = CoreUtils.CreateEngineMaterial(data.shaders.screenSpaceShadowPS);
+            m_CameraMotionVectorsMaterial = CoreUtils.CreateEngineMaterial(data.shaders.cameraMotionVectorsPS);
             //m_TileDepthInfoMaterial = CoreUtils.CreateEngineMaterial(data.shaders.tileDepthInfoPS);
             //m_TileDeferredMaterial = CoreUtils.CreateEngineMaterial(data.shaders.tileDeferredPS);
             m_StencilDeferredMaterial = CoreUtils.CreateEngineMaterial(data.shaders.stencilDeferredPS);
@@ -171,7 +173,7 @@ namespace UnityEngine.Rendering.Universal
             }
             
             
-            m_MotionVectorsPass = new MotionVectorsPass(RenderPassEvent.BeforeRenderingOpaques);
+            m_MotionVectorsPass = new MotionVectorsPass(RenderPassEvent.BeforeRenderingOpaques, m_CameraMotionVectorsMaterial);
 
             // Always create this pass even in deferred because we use it for wireframe rendering in the Editor or offscreen depth texture rendering.
             m_RenderOpaqueForwardPass = new DrawObjectsPass(URPProfileId.DrawOpaqueObjects, true, RenderPassEvent.BeforeRenderingOpaques, RenderQueueRange.opaque, data.opaqueLayerMask, m_DefaultStencilState, stencilData.stencilReference);

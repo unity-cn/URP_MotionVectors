@@ -43,6 +43,9 @@ namespace UnityEngine.Rendering.Universal
 
             [Reload("Shaders/Utils/ScreenSpaceShadows.shader")]
             public Shader screenSpaceShadowPS;
+            
+            [Reload("Shaders/Utils/CameraMotionVectors.shader")]
+            public Shader cameraMotionVectorsPS;
 
             [Reload("Shaders/Utils/Sampling.shader")]
             public Shader samplingPS;
