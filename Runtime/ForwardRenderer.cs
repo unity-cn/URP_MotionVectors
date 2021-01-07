@@ -298,6 +298,22 @@ namespace UnityEngine.Rendering.Universal
                 ConfigureCameraColorTarget(activeColorRenderTargetId);
             }
 
+            // Get MotionData
+            MotionData motionData;
+            if(!m_MotionDatas.TryGetValue(camera, out motionData))
+            {
+                motionData = new MotionData();
+                m_MotionDatas.Add(camera, motionData);
+            }
+            
+            // Calculate motion data
+            CalculateTime();
+            UpdateMotionData(camera, motionData);
+            
+            // Motion vector pass
+            m_MotionVectorsPass.Setup(motionData);
+            EnqueuePass(m_MotionVectorsPass);
+
             // Add render passes and gather the input requirements
             isCameraColorTargetValid = true;
             AddRenderPasses(ref renderingData);
@@ -431,22 +447,6 @@ namespace UnityEngine.Rendering.Universal
             if (cameraData.xr.hasValidOcclusionMesh)
                 EnqueuePass(m_XROcclusionMeshPass);
 #endif
-            
-            // Get MotionData
-            MotionData motionData;
-            if(!m_MotionDatas.TryGetValue(camera, out motionData))
-            {
-                motionData = new MotionData();
-                m_MotionDatas.Add(camera, motionData);
-            }
-            
-            // Calculate motion data
-            CalculateTime();
-            UpdateMotionData(camera, motionData);
-            
-            // Motion vector pass
-            m_MotionVectorsPass.Setup(motionData);
-            EnqueuePass(m_MotionVectorsPass);
 
             if (this.actualRenderingMode == RenderingMode.Deferred)
                 EnqueueDeferred(ref renderingData, requiresDepthPrepass, mainLightShadows, additionalLightShadows);

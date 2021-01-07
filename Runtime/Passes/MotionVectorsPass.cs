@@ -20,6 +20,7 @@ namespace UnityEngine.Rendering.Universal.Internal
             base.profilingSampler = new ProfilingSampler(k_ProfilingTag);
             renderPassEvent = evt;
             m_CameraMaterial = cameraMotionVectorsMaterial;
+            ConfigureInput(ScriptableRenderPassInput.Depth);
         }
         
         internal void Setup(MotionData motionData)
@@ -32,7 +33,10 @@ namespace UnityEngine.Rendering.Universal.Internal
         {
             // Configure Render Target
             m_MotionVectorHandle.Init(k_MotionVectorTexture);
-            cmd.GetTemporaryRT(m_MotionVectorHandle.id, cameraTextureDescriptor, FilterMode.Point);
+            var motionVectorsTextureDescriptor = cameraTextureDescriptor;
+            motionVectorsTextureDescriptor.colorFormat = RenderTextureFormat.RGHalf;
+            
+            cmd.GetTemporaryRT(m_MotionVectorHandle.id, motionVectorsTextureDescriptor, FilterMode.Point);
             ConfigureTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
             cmd.SetRenderTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
             cmd.ClearRenderTarget(true, true, Color.black, 1.0f);
