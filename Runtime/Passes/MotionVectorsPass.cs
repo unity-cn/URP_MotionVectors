@@ -23,24 +23,34 @@ namespace UnityEngine.Rendering.Universal.Internal
             ConfigureInput(ScriptableRenderPassInput.Depth);
         }
         
-        internal void Setup(MotionData motionData)
+        internal void Setup(MotionData motionData, RenderTargetHandle motionVectorTexture)
         {
             // Set data
             m_MotionData = motionData;
+            m_MotionVectorHandle = motionVectorTexture;
+        }
+
+        public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
+        {
+            RenderTextureDescriptor cameraTextureDescriptor = renderingData.cameraData.cameraTargetDescriptor;
+            cameraTextureDescriptor.colorFormat = RenderTextureFormat.RGHalf;
+            cmd.GetTemporaryRT(m_MotionVectorHandle.id, cameraTextureDescriptor, FilterMode.Point);
+            ConfigureTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
+            ConfigureClear(ClearFlag.All, Color.black);
         }
         
-        public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
-        {
-            // Configure Render Target
-            m_MotionVectorHandle.Init(k_MotionVectorTexture);
-            var motionVectorsTextureDescriptor = cameraTextureDescriptor;
-            motionVectorsTextureDescriptor.colorFormat = RenderTextureFormat.RGHalf;
-            
-            cmd.GetTemporaryRT(m_MotionVectorHandle.id, motionVectorsTextureDescriptor, FilterMode.Point);
-            ConfigureTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
-            cmd.SetRenderTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
-            cmd.ClearRenderTarget(true, true, Color.black, 1.0f);
-        }
+        // public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
+        // {
+        //     Debug.Log("Configure");
+        //     // Configure Render Target
+        //     var motionVectorsTextureDescriptor = cameraTextureDescriptor;
+        //     motionVectorsTextureDescriptor.colorFormat = RenderTextureFormat.RGHalf;
+        //     
+        //     cmd.GetTemporaryRT(m_MotionVectorHandle.id, motionVectorsTextureDescriptor, FilterMode.Point);
+        //     ConfigureTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
+        //     cmd.SetRenderTarget(m_MotionVectorHandle.Identifier(), m_MotionVectorHandle.Identifier());
+        //     cmd.ClearRenderTarget(true, true, Color.black, 1.0f);
+        // }
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
@@ -115,6 +125,18 @@ namespace UnityEngine.Rendering.Universal.Internal
         {
             context.ExecuteCommandBuffer(cmd);
             cmd.Clear();
+        }
+        
+        public override void OnCameraCleanup(CommandBuffer cmd)
+        {
+            if (cmd == null)
+                throw new ArgumentNullException("cmd");
+
+            if (m_MotionVectorHandle != RenderTargetHandle.CameraTarget)
+            {
+                cmd.ReleaseTemporaryRT(m_MotionVectorHandle.id);
+                m_MotionVectorHandle = RenderTargetHandle.CameraTarget;
+            }
         }
     }
     

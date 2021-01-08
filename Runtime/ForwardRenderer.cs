@@ -71,6 +71,7 @@ namespace UnityEngine.Rendering.Universal
         RenderTargetHandle m_CameraColorAttachment;
         RenderTargetHandle m_CameraDepthAttachment;
         RenderTargetHandle m_DepthTexture;
+        RenderTargetHandle m_MotionVectorTexture;
         RenderTargetHandle m_NormalsTexture;
         RenderTargetHandle[] m_GBufferHandles;
         RenderTargetHandle m_OpaqueColor;
@@ -203,6 +204,7 @@ namespace UnityEngine.Rendering.Universal
             m_CameraColorAttachment.Init("_CameraColorTexture");
             m_CameraDepthAttachment.Init("_CameraDepthAttachment");
             m_DepthTexture.Init("_CameraDepthTexture");
+            m_MotionVectorTexture.Init("_MotionVectorTexture");
             m_NormalsTexture.Init("_CameraNormalsTexture");
             if (this.renderingMode == RenderingMode.Deferred)
             {
@@ -311,7 +313,7 @@ namespace UnityEngine.Rendering.Universal
             UpdateMotionData(camera, motionData);
             
             // Motion vector pass
-            m_MotionVectorsPass.Setup(motionData);
+            m_MotionVectorsPass.Setup(motionData, m_MotionVectorTexture);
             EnqueuePass(m_MotionVectorsPass);
 
             // Add render passes and gather the input requirements
